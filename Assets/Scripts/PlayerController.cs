@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -16,11 +17,13 @@ public class PlayerController : MonoBehaviour
     private Vector3 boundary1;
     private Vector3 boundary2;
     public bool canMove = true;
+    public string areaTransitionName;
+    private GameObject playerStart;
 
     //Make instance of this script to be able reference from other scripts!
     public static PlayerController instance;
 
-      void Awake()
+    void Awake()
     {
         rigidBody = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
@@ -28,16 +31,32 @@ public class PlayerController : MonoBehaviour
         if (instance == null)
         {
             instance = this;
-        } else
+        }
+        else
         {
             if (instance != this)
             {
                 Destroy(gameObject);
             }
         }
+
+        areaTransitionName = "";
+        DontDestroyOnLoad(gameObject);
+
+        SceneManager.activeSceneChanged += OnSceneChange;
     }
 
-      void FixedUpdate()
+    private void OnSceneChange(Scene current, Scene next)
+    {
+        playerStart = GameObject.Find("PlayerStart");
+        if (playerStart != null)
+        {
+            transform.position = playerStart.transform.position;
+        }
+    }
+
+
+    void FixedUpdate()
     {
         MoveCharacter();
     }
@@ -56,11 +75,13 @@ public class PlayerController : MonoBehaviour
             isIdle = true;
         }
 
-
-        if (isIdle){
+        if (isIdle)
+        {
             rigidBody.velocity = Vector2.zero;
             animator.SetBool("isWalking", false);
-        } else {
+        }
+        else
+        {
             lastMoveDir = moveDir;
             rigidBody.velocity = moveDir * moveSpeed;
             animator.SetFloat("moveX", moveDir.x);
